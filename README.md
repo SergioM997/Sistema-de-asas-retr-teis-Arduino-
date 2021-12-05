@@ -1,4 +1,4 @@
-# Sistema-de-asas-retr-teis-Arduino
+# Sistema-de-asas-retrateis-Arduino
 
 Esta é a eletrônica de um sistema de asas retráteis apresentado como projeto final para a disciplina de Sistemas Hidráulicos.:
 
