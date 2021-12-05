@@ -1,0 +1,124 @@
+/* Escrito por Sergio Murilo para projeto final de sistemas hidraulicos UTFPR 2020/02 */
+#define trigPin 10 /* Muda a definicao do pino do 10 para trigPin, para o uso do sensor de distancia*/
+#define echoPin 13 /* Muda a definicao do pino do 13 para echoPin, para o uso do sensor de distancia*/
+
+float duration; /* Declara a variavel duration, que vai ser usada para o sensor de distancia funcionar */
+float distance; /* Declara a variavel distance, que tambem será usada pro funcionamento do sensor de distnacia*/
+bool comando; /* Declara variavel booleana comando, que acende o led que indica se é seguro retrair ou nao as asas, opera em conjunto com a saída do sensor de distancia*/
+int Fim_de_curso;  /* Variavel que representa dois fins de curso, representado aqui pelos interruptores*/
+int Fim_de_curso_2; /* Variavel que representa dois fins de curso, representado aqui pelos interruptores*/
+int buttonState;
+int analogPin = A3;
+float val;
+
+void setup() /* Funcao que nao retorna nada que serve pra configurar as funções dos pinos do arduino e inicializar o monitor serial*/
+{
+  Serial.begin (9600); /* Inicializa monitor serial*/
+  pinMode(trigPin, OUTPUT); /* Configura o pino trigPin como saída, que vai suprir o sensor de distancia com a informacao necessaria pra seu funcionamento*/
+  pinMode(echoPin, INPUT); /* Configura o pino echoPin como entrada, é o valor que o arduino recebe que reflete a distancia do sensor de distancia ate um dado corpo sólido*/
+  pinMode(12,OUTPUT); /* Configura o pino 12 como saida, serve para operação do led verde*/
+  pinMode(8,OUTPUT); /* Configura o pino 8 como saída, serve para operação do led vermelho*/
+  pinMode(7,INPUT);  /* Configura o pino 7 como entrada, serve para leitura digital de um dos interuptores*/
+  pinMode(2,INPUT); /* Configura o pino 2 como entrada, serve para leitura digital de um dos interuptores */
+  pinMode(3,OUTPUT); /* Configura o pino 3 como saída, serve para comandar um dos motores CC*/
+  pinMode(5,OUTPUT); /* Configura o pino 2 como saída, serve para comandar um dos motores CC*/
+  
+
+}
+ 
+void loop() /* Faz com que o sensor de distancia opere continuamente e ofereça um bom numero de leituras de distancia por segundo, assim como permite que o programa opere continuamente*/
+{
+  float SoundSpeed=0.0343; /* declara a variavel SoundSpeed para 0.0343, dado que a velocidade do som no vácuo é de 343 m/s; definição necessaria pra termos o dado da distancia. Evidentemente que o sistema não operaria no vácuo, mas para esse sistema essa suposição é suficiente. */
+  digitalWrite(trigPin, LOW); /* Envia um sinal binario zero, durante 2 milissegundos, configurado abaixo, para operacao do sensor de distancia*/
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH); /* Envia um sinal binario um, durante 10 milissegundos, configurado abaixo, para operacao do sensor de distancia*/
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW); /* Novamente o nivel logico do trigger do sensor é configurado pra zero, pra finalizar o ciclo do input que o sensor precisa pra funcionar*/
+  Fim_de_curso = digitalRead(2);
+  Fim_de_curso_2 = digitalRead(7);
+  
+  
+  duration = pulseIn(echoPin, HIGH); /* Verifica a duracao que o sinal de som "vai e volta" */
+  
+  distance = 0.5*duration*SoundSpeed; /* Retorna a distancia que o sinal sonico cobriu, dividido por 2; pelo fato de que o sinal "vai e volta"*/
+  digitalRead(0);
+  Serial.print(distance); /* Solicita exibiçao do dado obtido acima, a distancia*/
+  Serial.println(" ");
+  delay(500);
+  
+  /*Fim de curso 1: Asa esquerda*/
+  /*Fim de curso 2: Asa direita*/ 
+  /* Posiçao 0: Fim de curso pressionado indicando asa aberta*/
+  /* Posiçao 1: Fim de curso pressionado indicando asa retraida*/
+  
+  
+  if(Fim_de_curso == 0)
+  {
+  Serial.println("Asa esquerda na posicao 0");
+  }
+  else if(Fim_de_curso == 1)
+  {
+  Serial.println("Asa esquerda na posicao 1");
+  }
+  
+  if(Fim_de_curso_2 == 0)
+  {
+  Serial.println("Asa direita na posicao 0");
+  }
+  else if(Fim_de_curso_2 == 1)
+  {
+  Serial.println("Asa direita na posicao 1");
+  }
+  
+  if((Fim_de_curso == 0)&&(Fim_de_curso_2 == 1))
+  {
+  Serial.println("Alerta: Asas assimetricas");
+  }
+     
+  else if((Fim_de_curso == 1)&&(Fim_de_curso_2 == 0))
+  {
+  Serial.println("Alerta: Asas assimetricas");
+  }
+  
+  if((distance < 200.00)&&(Fim_de_curso==Fim_de_curso_2)&&(Fim_de_curso==0)) /*Condição que analisa se o sistema exibe uma mensagem em que consta que pode abrir as asas;*/
+  {
+    Serial.println("Sistema pode retrair as asas.");
+    comando = true;
+  }
+  else 
+  {
+    Serial.println("Sistema NAO pode retrair as asas.");
+    comando = false;
+  }
+  if((distance < 200.00)&&(Fim_de_curso==Fim_de_curso_2)){ /*Condição para acender led verde*/
+    digitalWrite(12, HIGH);
+    delay(499);
+    digitalWrite(12,LOW);
+  }
+  else{ /*Condição para acender led vermelho*/
+    digitalWrite(8, HIGH);
+    delay(499);
+    digitalWrite(8, LOW);
+  }
+  
+  val = analogRead(A3);  // Armazena leitura do pino analógico A3 na variável val, util pra ver se o botão está pressionado ou não
+
+  if((val < 20.00)&&(distance < 200.00)){ // Condição que analisa se o aviao esta proximo do solo e o botao esta pressionado 
+    if((Fim_de_curso == 0)&&(Fim_de_curso_2 == 0)){
+    Serial.println("Botao em 1");
+    digitalWrite(5, HIGH);
+    delay(499);
+    digitalWrite(5, LOW);
+    }
+    else if((Fim_de_curso == 1)&&(Fim_de_curso_2 == 1)){
+    Serial.println("Botao em 1");
+    digitalWrite(3, HIGH);
+    delay(499);
+    digitalWrite(3, LOW);
+    }
+  
+  
+  }
+  
+}  
+  
